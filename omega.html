@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulačka dávkování omega-3</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐟</text></svg>" />
+  <style>
+    html {
+      box-sizing: border-box;
+    }
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
+      margin: 10px auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #f9f9f9;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    label {
+      display: block;
+      margin: 16px 0 6px;
+      font-weight: bold;
+    }
+    select,
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    #result p {
+      margin: 10px 0;
+    }
+    #result strong {
+      display: inline-block;
+      min-width: 140px;
+    }
+    #doplnit {
+      margin-top: 20px;
+      font-style: italic;
+      color: #444;
+    }
+    @media (max-width: 600px) {
+      body {
+        margin: 5px;
+        padding: 10px;
+        font-size: 15px;
+      }
+      #result strong {
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Kalkulačka dávkování omega-3</h2>
+
+  <label>Indikace:
+    <select id="indikace">
+      <option value="snížená imunita">Snížená imunita</option>
+      <option value="alergie  astma">Alergie / astma</option>
+      <option value="krevní tlak  cholesterol">Vysoký krevní tlak / cholesterol</option>
+      <option value="učení, paměť">Učení, paměť a bystrá hlava</option>
+    </select>
+  </label>
+
+  <label>Účel:
+    <select id="mira">
+      <option value="prevence">Prevence</option>
+      <option value="léčba">Při potížích</option>
+    </select>
+  </label>
+
+  <label>Věk:
+    <select id="vek">
+      <option value="3 - 6 let">3 - 6 let</option>
+      <option value="7 - 12 let">7 - 12 let</option>
+      <option value="13 - 17 let">13 - 17 let</option>
+      <option value="dospělí">Dospělí</option>
+    </select>
+  </label>
+
+  <label>Produkt:
+    <select id="produkt"></select>
+  </label>
+
+  <button onclick="vypocitat()">Spočítat dávku</button>
+
+  <div id="result"></div>
+
+  <script>
+    const cenyProduktu = {
+      Norsan: 2.8,
+      Lysi: 2.0,
+      'Nordic Naturalis': 2.9,
+      Zinzino: 4.9,
+      Rosita: 7.0,
+      Trime: 3.6,
+      Mollers: 1.4,
+      'Nordic Naturals': 2.7,
+      'Brainmarket 1': 1.8,
+      'Brainmarket 2': 3.6,
+      Osavi: 1.1,
+      'Arctic Blue': 2.2,
+      NordBo: 2.7,
+      Calivita: 4.0
+    };
+
+    const davky = {
+      'snížená imunita': {
+        prevence: {
+          '3 - 6 let': 500,
+          '7 - 12 let': 800,
+          '13 - 17 let': 1000,
+          dospělí: 1000
+        },
+        léčba: {
+          '3 - 6 let': 800,
+          '7 - 12 let': 1000,
+          '13 - 17 let': 1500,
+          dospělí: 2000
+        }
+      },
+      'alergie  astma': {
+        prevence: {
+          '3 - 6 let': 500,
+          '7 - 12 let': 500,
+          '13 - 17 let': 500,
+          dospělí: 800
+        },
+        léčba: {
+          '3 - 6 let': 1000,
+          '7 - 12 let': 1000,
+          '13 - 17 let': 1500,
+          dospělí: 2000
+        }
+      },
+      'krevní tlak  cholesterol': {
+        prevence: {
+          '13 - 17 let': 500,
+          dospělí: 800
+        },
+        léčba: {
+          '13 - 17 let': 1500,
+          dospělí: 2000
+        }
+      },
+      'učení, paměť': {
+        prevence: {
+          '3 - 6 let': 500,
+          '7 - 12 let': 800,
+          '13 - 17 let': 1000,
+          dospělí: 1000
+        },
+        léčba: {
+          '3 - 6 let': 1000,
+          '7 - 12 let': 1500,
+          '13 - 17 let': 1500,
+          dospělí: 2000
+        }
+      }
+    };
+
+    const produktyPrevence = {
+      Norsan: 210,
+      Lysi: 239,
+      'Nordic Naturalis': 249,
+      Zinzino: 164
+    };
+    const produktyLecba = {
+      Rosita: 209,
+      Trime: 141,
+      Mollers: 121,
+      'Nordic Naturals': 125,
+      'Brainmarket 1': 145,
+      'Brainmarket 2': 186,
+      Osavi: 140,
+      'Arctic Blue': 147,
+      NordBo: 184,
+      Calivita: 140
+    };
+
+    function roundToHalf(num) {
+      return Math.round(num * 2) / 2;
+    }
+
+    function formatMl(value) {
+      return value % 1 === 0 ? value.toFixed(0) : value.toFixed(1);
+    }
+
+    function formatKc(ml, cenaZaMl) {
+      return Math.round(ml * cenaZaMl) + ' Kč';
+    }
+
+    function updateProdukty() {
+      const mira = document.getElementById('mira').value;
+      const select = document.getElementById('produkt');
+      select.innerHTML = '';
+      const produkty = mira === 'prevence' ? produktyPrevence : produktyLecba;
+      for (let [nazev, hodnota] of Object.entries(produkty)) {
+        const option = document.createElement('option');
+        option.value = nazev;
+        option.text = `${nazev} (${hodnota} mg/ml)`;
+        select.appendChild(option);
+      }
+    }
+
+    function vypocitat() {
+      const indikace = document.getElementById('indikace').value;
+      const mira = document.getElementById('mira').value;
+      const vek = document.getElementById('vek').value;
+      const produkt = document.getElementById('produkt').value;
+      const produkty = mira === 'prevence' ? produktyPrevence : produktyLecba;
+      const koncentrace = produkty[produkt];
+      const cenaZaMl = cenyProduktu[produkt];
+      const davka =
+        davky[indikace] &&
+        davky[indikace][mira] &&
+        davky[indikace][mira][vek];
+
+      if (!davka || !koncentrace || !cenaZaMl) {
+        document.getElementById('result').innerHTML =
+          'Pro tuto kombinaci nemáme data.';
+        return;
+      }
+
+      const denne = roundToHalf(davka / koncentrace);
+      const tydenne = roundToHalf(denne * 7);
+      const mesicne = roundToHalf(denne * 30);
+
+      let vystup = `
+        <p><strong>Denní dávka:</strong> ${formatMl(denne)} ml (${formatKc(
+        denne,
+        cenaZaMl
+      )})</p>
+        <p><strong>Týdenní dávka:</strong> ${formatMl(tydenne)} ml (${formatKc(
+        tydenne,
+        cenaZaMl
+      )})</p>
+        <p><strong>Měsíční dávka:</strong> ${formatMl(
+        mesicne
+      )} ml (${formatKc(mesicne, cenaZaMl)})</p>
+      `;
+
+      if (mira === 'prevence') {
+        vystup += `<p id="doplnit">Ideální je toto uvedené dávkování kombinovat s rostlinnými omega-3 (lněný nebo konopný olej, vlašské ořechy).</p>`;
+      }
+
+      const resultBox = document.getElementById('result');
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = vystup;
+    }
+
+    document.getElementById('mira').addEventListener('change', updateProdukty);
+    window.onload = updateProdukty;
+  </script>
+</body>
+</html>
